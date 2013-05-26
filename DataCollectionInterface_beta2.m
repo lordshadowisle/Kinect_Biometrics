@@ -8,10 +8,10 @@
 % Single screen format
 % This version works on the webcam stream
 
-function [data, depths] = DataCollectionInterface_beta2(safeGuard)
+function [data, depths] = DataCollectionInterface_beta2(leftOrRight)
 
-% SAFEGUARD is to ensure function is not calledby F5;
-safeGuard;
+% leftOrRight is to allow selection of left or right palm to be captured.
+% Also safeguards against the accidental calling by pressing F5.
 
 %% Instructions:
 uiwait(msgbox(['This experiment consists of three rounds of data collection.' char(10) 'Each set is broken into two steps. In the first step, ' ...
@@ -26,7 +26,7 @@ data = zeros(480, 640, 51,3);
 
 %% Routine for Repositioning
 for depthLevel = 1 : 3
-    rectCoords = PositionBox(depthLevel);
+    rectCoords = PositionBox(depthLevel, leftOrRight);
     for i = 5 : -0.2 : 0
         [imageD imageRGB] = GetSnapshot();
         imageD(imageD == 0) = 4000;
@@ -44,7 +44,7 @@ for depthLevel = 1 : 3
     %% Main Frame Capture Routine
     j = 0;
     % Capture data for 10 seconds
-    rectCoords = PositionBox(depthLevel);
+    rectCoords = PositionBox(depthLevel, leftOrRight);
     for i = 10 : -.2 : 0
         j = j + 1;
         [imageD imageRGB] = GetSnapshot();
@@ -65,7 +65,7 @@ end
 
 uiwait(msgbox(['Thank you for participating in this experiment!']));
 data = uint16(data);
-depths = [PositionBox(1);PositionBox(2);PositionBox(3)];
+depths = [PositionBox(1, leftOrRight);PositionBox(2, leftOrRight);PositionBox(3, leftOrRight)];
 end
 
 %% Generate a bounding rectangle
@@ -73,15 +73,22 @@ end
 % Depths are relatively well caliibrated
 % need to add setting for L/R hands
 % Re-align offset to maintain(largely) the same angle.
-function [rectCoords] = PositionBox(depth)
+function [rectCoords] = PositionBox(depth, leftOrRight)
+    if leftOrRight == 1
+        % left
+        xy = [150, 150];
+    else
+        % right
+        xy = [300, 150];
+    end
     switch depth
         case 1
-            rectCoords = [150, 150, 200, 200];
+            rectCoords = [xy, 200, 200];
         case 2
-            rectCoords = [150, 150, 150, 150];
+            rectCoords = [xy, 150, 150];
         case 3
-            rectCoords = [150, 150, 100, 100];
+            rectCoords = [xy, 110, 110];
         otherwise
-            rectCoords = [150, 150, 250, 250];
+            rectCoords = [xy, 250, 250];
     end
 end
