@@ -2,6 +2,7 @@
 %
 % This shell processes all the data for the data captured during the formal
 % experiment data.
+% Modified to function on L/R palms and the revised RectCoords.
 
 function Shell_Experiment_Processing()
 
@@ -11,7 +12,7 @@ function Shell_Experiment_Processing()
 
     %% Determine settings and load datasets
     isDisplay = 0;
-    switch 5
+    switch 7
         case 1
             fileName = 'palm_right'; %2, 3 invalid
         case 2
@@ -21,7 +22,17 @@ function Shell_Experiment_Processing()
         case 4
             fileName = 'palm_left2';
         case 5
-            fileName = 'DCI_twl';
+            fileName = 'DCI_twl2';
+            leftOrRight = 1;        %1 == Right, 2 == Left
+        case 6
+            fileName = 'DCI_tcg';
+            leftOrRight = 2;
+        case 7
+            fileName = 'DCI_wly';
+            leftOrRight = 2;
+        case 8
+            fileName = 'DCI_txm';
+            leftOrRight = 2;
     end
     load(['..\Biometrics\Data\' fileName]);
     try
@@ -32,16 +43,25 @@ function Shell_Experiment_Processing()
     end
     
     %% Extract based on ROI
-    for j = 1 : 15
+    for j = 1 : 51
         for i = 1 : 3
             % raw input
             subplot(3,3,i);
-            pic = dataR(:,:,j,i);
-            imagesc(pic);
-            r = rectangle('Position', depths(i,:));
+            if leftOrRight == 1
+                pic = dataR(:,:,j,i);
+                imagesc(pic);
+                r = rectangle('Position', depthsR(i,:));
+                handROI = ExtractROI(pic, depthsR(i,:));
+            else
+                pic = dataL(:,:,j,i);
+                imagesc(pic);
+                depthsL(i,:)
+                size(pic)
+                r = rectangle('Position', depthsL(i,:));
+                handROI = ExtractROI(pic, depthsL(i,:));
+            end
             set(r,'edgecolor','g');    
             % processed input
-            handROI = ExtractROI(pic, depths(i,:));
             subplot(3,3,i+3);
             imagesc(handROI);
             % segmented input
@@ -62,14 +82,15 @@ end
 
 %% Compute an extended ROI to extract the hand region.
 function [handROI] = ExtractROI(pic, ROI)
-    handROI = pic(ROI(1):(ROI(1)+ROI(3)), ROI(2):(ROI(2)+ROI(4)));
+    %handROI = pic(ROI(1):(ROI(1)+ROI(3)), ROI(2):(ROI(2)+ROI(4)));
+    handROI = pic(ROI(2):(ROI(2)+ROI(4)), ROI(1):(ROI(1)+ROI(3)));
     % determine most likely distributions
 end
 
 function [fi, xi, mu] = SegmentROI(handROI)
    temp = double(handROI(:));
    [xi, fi] = ksdensity(temp, linspace(400, 2500, 200));
-   temp(temp > 2500) = [];
+   temp(temp > 1800) = [];              % prevent foreground confusion
    poorSeed = (temp < mean(temp))+1;
    obj = gmdistribution.fit(temp,2, 'Start', poorSeed);
    mu = obj.mu;
