@@ -3,6 +3,7 @@
 % This shell processes all the data for the data captured during the formal
 % experiment data.
 % Modified to function on L/R palms and the revised RectCoords.
+% Modified for consistency of code
 
 function Shell_Experiment_Processing()
 
@@ -10,79 +11,75 @@ function Shell_Experiment_Processing()
     clc
     close all
 
-    %% Determine settings and load datasets
-    isDisplay = 0;
-    switch 7
+    isDisplay = 1;
+    switch 1
+        % The following are the new cases collected by the special method
         case 1
-            fileName = 'palm_right'; %2, 3 invalid
-        case 2
-            fileName = 'palm_left'; %4,13 invalid
-        case 3
-            fileName = 'palm_right2';
-        case 4
-            fileName = 'palm_left2';
-        case 5
             fileName = 'DCI_twl2';
-            leftOrRight = 1;        %1 == Right, 2 == Left
-        case 6
+        case 2
             fileName = 'DCI_tcg';
-            leftOrRight = 2;
-        case 7
+        case 3
             fileName = 'DCI_wly';
-            leftOrRight = 2;
-        case 8
+        case 4
             fileName = 'DCI_txm';
-            leftOrRight = 2;
     end
     load(['..\Biometrics\Data\' fileName]);
-    try
-        load(['Labels\' fileName '_ROI']);
-    catch
-        disp('No Label File.');
-        bw = 1;
+
+    if isDisplay
+        figHandle = figure(1);
     end
-    
+                
+    % Do leftOrRight = 1;        %1 == Right, 2 == Left
+    for leftOrRight = 1:2
     %% Extract based on ROI
-    for j = 1 : 51
+    for j = 1 : 3
         for i = 1 : 3
-            % raw input
-            subplot(3,3,i);
             if leftOrRight == 1
                 pic = dataR(:,:,j,i);
-                imagesc(pic);
-                r = rectangle('Position', depthsR(i,:));
-                handROI = ExtractROI(pic, depthsR(i,:));
+                rectCoords = depthsR(i,:);
+                handROI = ExtractROI(pic, rectCoords);
             else
                 pic = dataL(:,:,j,i);
-                imagesc(pic);
-                depthsL(i,:)
-                size(pic)
-                r = rectangle('Position', depthsL(i,:));
-                handROI = ExtractROI(pic, depthsL(i,:));
+                rectCoords = depthsL(i,:);
+                handROI = ExtractROI(pic, rectCoords);
             end
-            set(r,'edgecolor','g');    
+            if isDisplay
+                subplot(3,3,i);
+                imagesc(pic)
+                r = rectangle('Position', rectCoords);
+                set(r,'edgecolor','g');    
             % processed input
-            subplot(3,3,i+3);
-            imagesc(handROI);
-            % segmented input
-            subplot(3,3,i+6);
+                subplot(3,3,i+3);
+                imagesc(handROI);
+                % segmented input
+                subplot(3,3,i+6);
+            end
             [a b, peaks] = SegmentROI(handROI);
-            plot(a, b); hold on;
-            plot([peaks(1) peaks(1)], [0, max(b)],'r');
-            plot([peaks(2) peaks(2)], [0, max(b)],'g');
-            plot([peaks(3) peaks(3)], [0, max(b)],'k');
-            %plot([peaks(4) peaks(4)], [0, max(b)],'k');
-            hold off;
-            %text(2000,1e-3, [num2str(peaks)]);
-            imagesc(handROI .* uint16((handROI < peaks(3))));
+            if isDisplay
+                plot(a, b); hold on;
+                plot([peaks(1) peaks(1)], [0, max(b)],'r');
+                plot([peaks(2) peaks(2)], [0, max(b)],'g');
+                plot([peaks(3) peaks(3)], [0, max(b)],'k');
+                %plot([peaks(4) peaks(4)], [0, max(b)],'k');
+                hold off;
+                if leftOrRight == 1
+                    set(figHandle, 'name', ['Right, Sample ' num2str(j)]);
+                else
+                    set(figHandle, 'name', ['Left, Sample ' num2str(j)]);
+                end
+                imagesc(handROI .* uint16((handROI < peaks(3))));        
+            end
         end
-        waitforbuttonpress;
+        
+        if isDisplay
+            pause(0.5)
+        end
+    end
     end
 end
 
 %% Compute an extended ROI to extract the hand region.
 function [handROI] = ExtractROI(pic, ROI)
-    %handROI = pic(ROI(1):(ROI(1)+ROI(3)), ROI(2):(ROI(2)+ROI(4)));
     handROI = pic(ROI(2):(ROI(2)+ROI(4)), ROI(1):(ROI(1)+ROI(3)));
     % determine most likely distributions
 end
