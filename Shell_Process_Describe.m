@@ -86,12 +86,11 @@ function [datasetStruct] = Shell_Process_Describe(switchCode, isDisplay)
                 %GetPalmDescriptors(palmD, isDisplay);
                 % - > actually, no reason not to use relative addressing.
                 [palmDescriptors, handpoly] = GetPalmDescriptors(handROI .* handROI .* (handROI < peaks(3)), isDisplay);
-                
                 % Do some L/R reversal
                 if ~isempty(palmDescriptors)
                     datasetDescriptors = [datasetDescriptors; reshape(palmDescriptors,1,90)];
                     datasetLeftOrRight = [datasetLeftOrRight; leftOrRight];
-                    datasetHandpoly = [datasetHandpoly; reshape(handpoly, 1, 10);];
+                    datasetHandpoly = [datasetHandpoly; reshape(handpoly, 1, 50);];
                     datasetDepth = [datasetDepth; i];
                     datasetReference = [datasetReference; leftOrRight, i, j];       % technically contains all data... but well.
                 end
@@ -133,7 +132,7 @@ end
 
 %% Function to obtain the descriptors for a single palm, if valid.
 %% Forked from Shell_DescribeDataset
-function [palmDescriptors, handpoly] = GetPalmDescriptors(palmD, isDisplay)
+function [palmDescriptors, allhandpoly] = GetPalmDescriptors(palmD, isDisplay)
     isNonRecoverable = 0;
 
     [valleyLoc, peakLoc, palmCent, roiD] = ValleyPeak_Robust3_function(palmD, 0);
@@ -204,9 +203,11 @@ function [palmDescriptors, handpoly] = GetPalmDescriptors(palmD, isDisplay)
     if ~isNonRecoverable
         %%Extract each finger segment and display
         palmDescriptors = zeros(5,18);
+        allhandpoly = [];
         for i = 1 : 5
             handpoly = [];
             handpoly = [tempValleyLoc(i,:); tempValleyLoc(i+1,:); virtualPeakLoc(i+1,:); tempPeakLoc(i+1,:); virtualPeakLoc(i,:)];
+            allhandpoly = [allhandpoly; handpoly];
             BW = poly2mask(handpoly(:,2), handpoly(:,1), size(palmD,1), size(palmD,2));
             finger = BW .* palmD;
             a = sum(finger,1) == 0;
@@ -224,11 +225,11 @@ function [palmDescriptors, handpoly] = GetPalmDescriptors(palmD, isDisplay)
         end
     else
         palmDescriptors = [];
-        handpoly = [];
+        allhandpoly = [];
     end
     
     if max(max(isnan(palmDescriptors))) == 1
         palmDescriptors = [];
-        handpoly = [];
+        allhandpoly = [];
     end
 end
