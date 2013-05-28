@@ -40,14 +40,16 @@ function [datasetStruct] = Shell_Process_Describe(switchCode, isDisplay)
     % Do leftOrRight = 1;        %1 == Right, 2 == Left
     for leftOrRight = 1:2
         %% Extract based on ROI
-        for j = 1 : 3               %sample number
+        for j = 1 : 51               %sample number
             for i = 1 : 3           %depth level
                 if leftOrRight == 1
+                    disp(['Processing Right, Sample ' num2str(j) ', Depth ' num2str(i)]);
                     imageD = dataR(:,:,j,i);
                     imageD = double(imageD);
                     rectCoords = depthsR(i,:);
                     handROI = ExtractROI(imageD, rectCoords);
                 else
+                    disp(['Processing Left, Sample ' num2str(j) ', Depth ' num2str(i) ]);
                     imageD = dataL(:,:,j,i);
                     imageD = double(imageD);
                     rectCoords = depthsL(i,:);
@@ -62,29 +64,29 @@ function [datasetStruct] = Shell_Process_Describe(switchCode, isDisplay)
                     subplot(3,3,i+3);
                     imagesc(handROI);
                     % segmented input
-                    subplot(3,3,i+6);
                 end
-                [a b, peaks] = SegmentROI(handROI);
+                [a, b, peaks] = SegmentROI(handROI);
                 if isDisplay
-                    plot(a, b); hold on;
-                    plot([peaks(1) peaks(1)], [0, max(b)],'r');
-                    plot([peaks(2) peaks(2)], [0, max(b)],'g');
-                    plot([peaks(3) peaks(3)], [0, max(b)],'k');
-                    %plot([peaks(4) peaks(4)], [0, max(b)],'k');
-                    hold off;
+%                     subplot(3,3,i+3);
+%                     plot(a, b); hold on;
+%                     plot([peaks(1) peaks(1)], [0, max(b)],'r');
+%                     plot([peaks(2) peaks(2)], [0, max(b)],'g');
+%                     plot([peaks(3) peaks(3)], [0, max(b)],'k');
+%                     hold off;
                     if leftOrRight == 1
                         set(figHandle, 'name', ['Right, Sample ' num2str(j)]);
                     else
                         set(figHandle, 'name', ['Left, Sample ' num2str(j)]);
                     end
+                    subplot(3,3,i+6);
                     imagesc(handROI .* (handROI < peaks(3)));        
                 end
                 palmD = zeros(480,640);
-                palmD(rectCoords(2):(rectCoords(2)+rectCoords(4)), rectCoords(1):(rectCoords(1)+rectCoords(3))) = handROI .* (handROI < peaks(3));            %revisions
+                %palmD(rectCoords(2):(rectCoords(2)+rectCoords(4)), rectCoords(1):(rectCoords(1)+rectCoords(3))) = handROI .* (handROI < peaks(3));            %revisions
                 %GetPalmDescriptors(palmD, isDisplay);
                 % - > actually, no reason not to use relative addressing.
                 [palmDescriptors, handpoly] = GetPalmDescriptors(handROI .* handROI .* (handROI < peaks(3)), isDisplay);
-
+                
                 % Do some L/R reversal
                 if ~isempty(palmDescriptors)
                     datasetDescriptors = [datasetDescriptors; reshape(palmDescriptors,1,90)];
@@ -113,7 +115,7 @@ end
 
 function [fi, xi, mu] = SegmentROI(handROI)
    temp = double(handROI(:));
-   [xi, fi] = ksdensity(temp, linspace(400, 2500, 200));
+   [xi, fi] = ksdensity(temp, linspace(400, 2500, 200));        %->actually quite poor, may collapse into single smoothed kernel
    temp(temp > 1800) = [];              % prevent foreground confusion
    poorSeed = (temp < mean(temp))+1;
    obj = gmdistribution.fit(temp,2, 'Start', poorSeed);
@@ -178,7 +180,7 @@ function [palmDescriptors, handpoly] = GetPalmDescriptors(palmD, isDisplay)
             %disp('There is a length mismatch');
             digitLengthDifference = -1;
         end
-        % Apply the polygon area rule
+        % Apply the polygon area rule --> need to check the pixels as well.
         fingerPolyAreas = zeros(1,5);
         for i = 0 : 4
             fingerPolyAreas(i+1) = polyarea(handpoly((i*5+1):(i*5+5),1), handpoly((i*5+1):(i*5+5),2));
@@ -221,6 +223,11 @@ function [palmDescriptors, handpoly] = GetPalmDescriptors(palmD, isDisplay)
             [palmDescriptors(i,:)] = DescribeFinger(finger, handpoly, palmCent,0);
         end
     else
+        palmDescriptors = [];
+        handpoly = [];
+    end
+    
+    if max(max(isnan(palmDescriptors))) == 1
         palmDescriptors = [];
         handpoly = [];
     end
