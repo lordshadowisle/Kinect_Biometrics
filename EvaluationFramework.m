@@ -9,15 +9,27 @@
 
 function [evaluationResult, caseData, caseLabels] = EvaluationFramework(switchCode)
     switchCode;
-    testSplit = 0.2;
+    learningMethod = 2;
+    testSplit = 5;
     
     %% Preprocessing
     % Load data and labels from memory
     [caseData, caseLabels] = LoadData(1);
-    % Generate training and test proportions
-    [trainTestMembership] = GenerateTrainTestMembership(caseLabels, testSplit);
+    % Generate training and test proportions (using CV)
+    [trainTestMembership] = GenerateCVTrainTestMembership(caseLabels, testSplit);
     
-    evaluationResult = 0;
+    %% Learning and Evaluation
+    switch learningMethod
+        case 1
+            %Multi-class random forest
+            confusionTable = ClassifyRandomForest(caseData, caseLabels(:,3), trainTestMembership);
+        case 2
+            %Placeholder method
+            [trainTestMembership] = GenerateCVTrainTestMembership(caseLabels, 5);
+            confusionTable = ClassifyRandomForest(caseData, caseLabels(:,3), trainTestMembership);
+    end
+    evaluationResult = confusionTable;
+    
 end
 
 %% Load Data
@@ -54,6 +66,9 @@ function [caseData, caseLabels] = LoadData(loadSetting)
         adjustedDimensions = sort(adjustedDimensions);
         caseData = caseData(:, adjustedDimensions);
     end
+    
+    % standardize dimensions
+    caseData = zscore(caseData);
 end
 
 %% Generate TrainTest Memberships
@@ -66,11 +81,28 @@ function [trainTestMembership] = GenerateTrainTestMembership(caseLabels, testSpl
     for i = 1 : caseLabels(end,3)
         isClass = find(caseLabels(:,3) == i);
         randOrder = randperm(length(isClass));
-        trainTestMembership(isClass(randOrder(1:ceil(length(isClass)/5)))) = 0;
+        trainTestMembership(isClass(randOrder(1:ceil(length(isClass)/testSplit)))) = 0;
     end
+    
+    trainTestMembership = trainTestMembership > 0;
 end
 
 %% Generate CV TrainTest Memberships
-function [trainTestMembershipCV] = GenerateCVTrainTestMembership(caseLabels, testSplit)
-    trainTestMembershipCV = 0;
+% testSplit determines the number of CV folds. 
+% trainTestMembership is a n*split vector, 1 represents train, 0 test.
+function [trainTestMembership] = GenerateCVTrainTestMembership(caseLabels, testSplit)
+    trainTestMembership = ones(size(caseLabels, 1),testSplit);
+
+    % Generate and assign splits for each class
+    for i = 1 : caseLabels(end,3)            
+        isClass = find(caseLabels(:,3) == i);
+        randOrder = randperm(length(isClass));
+        itemsPerSplit = ceil(length(isClass) / testSplit);
+        for j = 1 : testSplit
+            %rotate initial split.
+            trainTestMembership(isClass(randOrder(1:itemsPerSplit)),j) = 0;
+            randOrder = circshift(randOrder,[1,itemsPerSplit]);
+        end
+    end
+    trainTestMembership = trainTestMembership > 0;
 end
