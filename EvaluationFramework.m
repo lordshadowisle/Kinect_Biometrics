@@ -56,9 +56,21 @@ function [caseData, caseLabels] = LoadData(loadSetting)
     end
 end
 
-%% GenerateTrainTestMemberships
-% testSplit determinse the relative split between the training and test
+%% Generate TrainTest Memberships
+% testSplit determines the relative split between the training and test
 % classes.
+% trainTestMembership is a vector, 1 represents training, 0 test.
 function [trainTestMembership] = GenerateTrainTestMembership(caseLabels, testSplit)
-    trainTestMembership = zeros(1, size(caseLabels, 1));
+    trainTestMembership = ones(size(caseLabels, 1),1);
+    % Generate and assign splits for each class
+    for i = 1 : caseLabels(end,3)
+        isClass = find(caseLabels(:,3) == i);
+        randOrder = randperm(length(isClass));
+        trainTestMembership(isClass(randOrder(1:ceil(length(isClass)/5)))) = 0;
+    end
+end
+
+%% Generate CV TrainTest Memberships
+function [trainTestMembershipCV] = GenerateCVTrainTestMembership(caseLabels, testSplit)
+    trainTestMembershipCV = 0;
 end
