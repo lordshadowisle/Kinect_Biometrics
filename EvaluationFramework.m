@@ -1,13 +1,14 @@
 %% Evaluation Framework for Palm Biometrics
 % 
 % This shell program evaluates the algorithms for palm biometric
-% recognition.
+% recognition. An option is included to repeat the cross-validation using
+% different random seeds
 %
 % There are two evaluation tasks for the palm biometrics
 % i) Simple user verification
 % ii) Novel user verification
 
-function [evaluationResult, caseData, caseLabels] = EvaluationFramework(switchCode)
+function [evaluationResult, caseData, caseLabels] = EvaluationFramework(switchCode, numTrials)
     switchCode;
     learningMethod = switchCode;
     testSplit = 10;
@@ -15,25 +16,29 @@ function [evaluationResult, caseData, caseLabels] = EvaluationFramework(switchCo
     %% Preprocessing
     % Load data and labels from memory
     [caseData, caseLabels] = LoadData(1);
-    % Generate training and test proportions (using CV)
-    [trainTestMembership] = GenerateCVTrainTestMembership(caseLabels, testSplit);
+    evaluationResult = zeros(caseLabels(end,3), caseLabels(end,3),numTrials);
     
-    %% Learning and Evaluation
-    switch learningMethod
-        case 1
-            %Multi-class random forest
-            confusionTable = ClassifyRandomForest(caseData, caseLabels(:,3), trainTestMembership);
-        case 2
-            %K-Nearest Neighbor 
-            confusionTable = ClassifyKNN(caseData, caseLabels(:,3), trainTestMembership,3);
-        case 3
-            %Bayesian classifier
-            confusionTable = ClassifyBayes(caseData, caseLabels(:,3), trainTestMembership);
-        case 4
-            %SVM
-            confusionTable = ClassifySVM(caseData, caseLabels(:,3), trainTestMembership);
+    for trialIdx = 1 : numTrials
+        % Generate training and test proportions (using CV)
+        [trainTestMembership] = GenerateCVTrainTestMembership(caseLabels, testSplit, trialIdx);
+
+        %% Learning and Evaluation
+        switch learningMethod
+            case 1
+                %Multi-class random forest
+                confusionTable = ClassifyRandomForest(caseData, caseLabels(:,3), trainTestMembership);
+            case 2
+                %K-Nearest Neighbor 
+                confusionTable = ClassifyKNN(caseData, caseLabels(:,3), trainTestMembership,3);
+            case 3
+                %Bayesian classifier
+                confusionTable = ClassifyBayes(caseData, caseLabels(:,3), trainTestMembership);
+            case 4
+                %Linear Discriminant
+                confusionTable = ClassifyLinearDiscriminant(caseData, caseLabels(:,3), trainTestMembership);
+        end
+        evaluationResult(:,:,trialIdx) = confusionTable;
     end
-    evaluationResult = confusionTable;
     
 end
 
@@ -95,7 +100,10 @@ end
 %% Generate CV TrainTest Memberships
 % testSplit determines the number of CV folds. 
 % trainTestMembership is a n*split vector, 1 represents train, 0 test.
-function [trainTestMembership] = GenerateCVTrainTestMembership(caseLabels, testSplit)
+% randSeed controls the rng seed, allows for repeatable trials.
+function [trainTestMembership] = GenerateCVTrainTestMembership(caseLabels, testSplit, randSeed)
+    s = RandStream('mcg16807', 'Seed', randSeed);
+    s = RandStream.setGlobalStream(s);
     trainTestMembership = ones(size(caseLabels, 1),testSplit);
 
     % Generate and assign splits for each class
