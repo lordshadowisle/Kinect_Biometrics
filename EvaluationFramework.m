@@ -9,7 +9,7 @@
 
 function [evaluationResult, caseData, caseLabels] = EvaluationFramework(switchCode)
     switchCode;
-    learningMethod = 2;
+    learningMethod = switchCode;
     testSplit = 5;
     
     %% Preprocessing
@@ -24,9 +24,8 @@ function [evaluationResult, caseData, caseLabels] = EvaluationFramework(switchCo
             %Multi-class random forest
             confusionTable = ClassifyRandomForest(caseData, caseLabels(:,3), trainTestMembership);
         case 2
-            %Placeholder method
-            [trainTestMembership] = GenerateCVTrainTestMembership(caseLabels, 5);
-            confusionTable = ClassifyRandomForest(caseData, caseLabels(:,3), trainTestMembership);
+            %K-Nearest Neighbor 
+            confusionTable = ClassifyKNN(caseData, caseLabels(:,3), trainTestMembership,3);
     end
     evaluationResult = confusionTable;
     
