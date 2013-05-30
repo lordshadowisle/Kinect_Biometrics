@@ -10,7 +10,7 @@
 function [evaluationResult, caseData, caseLabels] = EvaluationFramework(switchCode)
     switchCode;
     learningMethod = switchCode;
-    testSplit = 5;
+    testSplit = 10;
     
     %% Preprocessing
     % Load data and labels from memory
@@ -26,6 +26,12 @@ function [evaluationResult, caseData, caseLabels] = EvaluationFramework(switchCo
         case 2
             %K-Nearest Neighbor 
             confusionTable = ClassifyKNN(caseData, caseLabels(:,3), trainTestMembership,3);
+        case 3
+            %Bayesian classifier
+            confusionTable = ClassifyBayes(caseData, caseLabels(:,3), trainTestMembership);
+        case 4
+            %SVM
+            confusionTable = ClassifySVM(caseData, caseLabels(:,3), trainTestMembership);
     end
     evaluationResult = confusionTable;
     
