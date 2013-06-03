@@ -8,7 +8,7 @@
 % i) Simple user verification
 % ii) Novel user verification
 
-function [evaluationResult, caseData, caseLabels] = EvaluationFramework(switchCode, numTrials)
+function [evaluationResult, evaluationMetrics, caseData, caseLabels] = EvaluationFramework(switchCode, numTrials)
     switchCode;
     learningMethod = switchCode;
     testSplit = 10;
@@ -38,8 +38,10 @@ function [evaluationResult, caseData, caseLabels] = EvaluationFramework(switchCo
                 confusionTable = ClassifyLinearDiscriminant(caseData, caseLabels(:,3), trainTestMembership);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
+            
+
     end
-    
+        evaluationMetrics = ComputeEvaluationMetrics(evaluationResult);
 end
 
 %% Load Data
@@ -118,4 +120,41 @@ function [trainTestMembership] = GenerateCVTrainTestMembership(caseLabels, testS
         end
     end
     trainTestMembership = trainTestMembership > 0;
+end
+
+%% Compute Evaluation Metrics
+% Outputs: Accuracy, Micro-averaged F-measure, Macro-averaged F-measure
+function [evaluationMetrics] = ComputeEvaluationMetrics(confusionTable)
+    evaluationMetrics = zeros(1,3);
+    compactTable = sum(confusionTable,3);
+    
+    % Compute micro-averaged F-measure
+    pi_n = 0;
+    pi_d = 0;
+    rho_n = 0;
+    rho_d = 0;
+
+    for i = 1 : size(compactTable,1)
+        pi_n = pi_n + compactTable(i,i);
+        pi_d = pi_d + sum(compactTable(i,i) + sum(compactTable(:,i)) - compactTable(i,i));
+        rho_n = rho_n + compactTable(i,i);
+        rho_d = rho_d + sum(compactTable(i,i) + sum(compactTable(i,:)) - compactTable(i,i));
+    end
+    pi_ = pi_n / pi_d;
+    rho_ = rho_n / rho_d;
+    Fmicro = 2 * pi_ * rho_ / (pi_ + rho_);
+
+    % Compute macro-averaged F-measure
+    F = 0;
+    for i = 1 : size(compactTable,1)
+        pi_i = compactTable(i,i) / sum(compactTable(:,i));
+        rho_i = compactTable(i,i) / sum(compactTable(i,:));
+        F = F + 2 * pi_i * rho_i / (pi_i + rho_i);
+    end
+    Fmacro = F / size(compactTable,1);
+    
+    % Export Fmicro and Fmacro
+    evaluationMetrics(1) = sum(diag(compactTable)) / sum(sum(compactTable));
+    evaluationMetrics(2) = Fmicro;
+    evaluationMetrics(3) = Fmacro;
 end
