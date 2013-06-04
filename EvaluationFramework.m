@@ -2,22 +2,49 @@
 % 
 % This shell program evaluates the algorithms for palm biometric
 % recognition. An option is included to repeat the cross-validation using
-% different random seeds
+% different random seeds.
+% 04/06: Added options for PCA and PCA dimensionality reduction preprocessing
 %
 % There are two evaluation tasks for the palm biometrics
 % i) Simple user verification
 % ii) Novel user verification
 
-function [evaluationResult, evaluationMetrics, caseData, caseLabels] = EvaluationFramework(switchCode, numTrials)
+function [evaluationResult, evaluationMetrics, caseData, caseLabels] = EvaluationFramework(switchCode, numTrials, varargin)
     switchCode;
     learningMethod = switchCode;
     testSplit = 10;
+    usePCA = 0;
+    
+    % Argument check to enable PCA preprocessing
+    if ~isempty(varargin)
+        usePCA = 1;
+        if nargin >= 4
+            dimReducePCA = varargin{2};
+            if ((dimReducePCA < 0) || (dimReducePCA > 1))
+                dimReducePCA = 0.95;
+            end
+        end
+    end
     
     %% Preprocessing
     % Load data and labels from memory
     [caseData, caseLabels] = LoadData(1);
     evaluationResult = zeros(caseLabels(end,3), caseLabels(end,3),numTrials);
+    processedData = caseData;
+    processedLabels = caseLabels;
     
+    %% PCA Processing
+    % Apply PCA dimensionality reduction
+    if usePCA == 1
+        [~, processedData, latent] = princomp(caseData);
+        % If dimensionality reduction is on, filter the least descriptive components
+        if exist('dimReducePCA')
+            dimReducePCAIndex = min(find((cumsum(latent) / sum(latent)) > dimReducePCA));
+            processedData = processedData(:, 1:dimReducePCAIndex);
+        end
+    end
+    
+    %% Main Training and Testing Loop
     for trialIdx = 1 : numTrials
         % Generate training and test proportions (using CV)
         [trainTestMembership] = GenerateCVTrainTestMembership(caseLabels, testSplit, trialIdx);
@@ -26,16 +53,19 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
         switch learningMethod
             case 1
                 %Multi-class random forest
-                confusionTable = ClassifyRandomForest(caseData, caseLabels(:,3), trainTestMembership);
+                confusionTable = ClassifyRandomForest(processedData, processedLabels(:,3), trainTestMembership);
             case 2
                 %K-Nearest Neighbor 
-                confusionTable = ClassifyKNN(caseData, caseLabels(:,3), trainTestMembership,3);
+                confusionTable = ClassifyKNN(processedData, processedLabels(:,3), trainTestMembership,3);
             case 3
                 %Bayesian classifier
-                confusionTable = ClassifyBayes(caseData, caseLabels(:,3), trainTestMembership);
+                confusionTable = ClassifyBayes(processedData, processedLabels(:,3), trainTestMembership);
             case 4
                 %Linear Discriminant
-                confusionTable = ClassifyLinearDiscriminant(caseData, caseLabels(:,3), trainTestMembership);
+                confusionTable = ClassifyLinearDiscriminant(processedData, processedLabels(:,3), trainTestMembership);
+            case 5
+                %PCA -> kNN
+                confusionTable = ClassifyPCA_KNN(processedData, processedLabels(:,3), trainTestMembership,3);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
             
