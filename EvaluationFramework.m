@@ -63,9 +63,6 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
             case 4
                 %Linear Discriminant
                 confusionTable = ClassifyLinearDiscriminant(processedData, processedLabels(:,3), trainTestMembership);
-            case 5
-                %PCA -> kNN
-                confusionTable = ClassifyPCA_KNN(processedData, processedLabels(:,3), trainTestMembership,3);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
             
@@ -179,6 +176,10 @@ function [evaluationMetrics] = ComputeEvaluationMetrics(confusionTable)
     for i = 1 : size(compactTable,1)
         pi_i = compactTable(i,i) / sum(compactTable(:,i));
         rho_i = compactTable(i,i) / sum(compactTable(i,:));
+        % check for edge cases
+        if sum(compactTable(:,i)) == 0
+            pi_i = 1;
+        end    
         F = F + 2 * pi_i * rho_i / (pi_i + rho_i);
     end
     Fmacro = F / size(compactTable,1);
