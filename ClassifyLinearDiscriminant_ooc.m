@@ -9,12 +9,17 @@ function [confusionTable] = ClassifyLinearDiscriminant_ooc(data, labels, trainSp
     %determine the OOC label
     for oocLabel = 1 : max(labels)
         for k = 1 : size(trainSplit,2)
+            % Training Task
+            tempOOCclass = labels ~= oocLabel;
             tempTrainSplit = trainSplit(:,k);
+            tempTrainSplit = (tempTrainSplit & tempOOCclass);
             learner = ClassificationDiscriminant.fit(data(tempTrainSplit,:), labels(tempTrainSplit));
             [oocThreshold] = SetThreshold(learner, data(tempTrainSplit,:), labels(tempTrainSplit));
+            
+            % Evaluation Task
+            tempTrainSplit = trainSplit(:,k);
             [predictedLabel, score] = predict(learner, data(~tempTrainSplit,:));
             actualLabel = labels(~tempTrainSplit);
-
             % reject OOC samples
             sortedScores = sort(score,2, 'descend');
             multiplier = sortedScores(:,1) ./ (sortedScores(:,2)+.01);
@@ -34,7 +39,7 @@ end
 % Find a multiplier threshold that maximizes the chance of correct
 % classification
 function [oocThreshold, correctMultiplier, wrongMultiplier] = SetThreshold(learner, data, labels)
-    costFactor = 0.49;
+    costFactor = 1;
     [predictedLabel, score] = predict(learner, data);
     isCorrect = predictedLabel == labels;
     % compute general multipliers
@@ -45,11 +50,16 @@ function [oocThreshold, correctMultiplier, wrongMultiplier] = SetThreshold(learn
     % compute multiplier for wrong cases
     wrongMultiplier = sort(multiplier(~isCorrect),'descend');
     
-    % Compute cost at each multiplier level
-    cost = zeros(1,length(wrongMultiplier));
-    for i = 1 : length(cost)
-        cost(i) = sum(correctMultiplier < wrongMultiplier(i)) + costFactor*i;
+    % catch edge cases
+    if isempty(wrongMultiplier)
+        oocThreshold = min(correctMultiplier);
+    else
+        % Compute cost at each multiplier level
+        cost = zeros(1,length(wrongMultiplier));
+        for i = 1 : length(cost)
+            cost(i) = sum(correctMultiplier < wrongMultiplier(i)) + costFactor*i;
+        end
+        [~,oocThreshold] = min(cost);
+        oocThreshold = wrongMultiplier(oocThreshold);
     end
-    [~,oocThreshold] = min(cost);
-    oocThreshold = wrongMultiplier(oocThreshold);
 end
