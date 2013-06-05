@@ -14,6 +14,7 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
     learningMethod = switchCode;
     testSplit = 10;
     usePCA = 0;
+    loadSetting = 1;
     
     % Argument check to enable PCA preprocessing
     if ~isempty(varargin)
@@ -28,7 +29,7 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
     
     %% Preprocessing
     % Load data and labels from memory
-    [caseData, caseLabels] = LoadData(1);
+    [caseData, caseLabels] = LoadData(loadSetting);
     evaluationResult = zeros(caseLabels(end,3), caseLabels(end,3),numTrials);
     processedData = caseData;
     processedLabels = caseLabels;
@@ -73,6 +74,9 @@ end
 
 %% Load Data
 % loadSetting determines the setting at which the data is loaded.
+% 0 - Full dataset, no discarded dimensions
+% 1 - Non-adjusted dimensions discarded
+% 2 - Also discard thumb and little finger
 function [caseData, caseLabels] = LoadData(loadSetting)
     caseData = [];
     caseLabels = [];
@@ -99,11 +103,17 @@ function [caseData, caseLabels] = LoadData(loadSetting)
         caseLabels =[caseLabels; tempCaseLabels];
     end
     
-    if 1
+    if loadSetting >= 1
         adjustedDimensions = [2,11:18]; 
         adjustedDimensions = [5*adjustedDimensions, 5*adjustedDimensions-1, 5*adjustedDimensions-2, 5*adjustedDimensions-3, 5*adjustedDimensions-4];
         adjustedDimensions = sort(adjustedDimensions);
         caseData = caseData(:, adjustedDimensions);
+        % Use only 3 middle fingers
+        if loadSetting == 2
+            adjustedDimensions = [2:5:size(caseData,2), 3:5:size(caseData,2), 4:5:size(caseData,2)];
+            adjustedDimensions = sort(adjustedDimensions);
+            caseData = caseData(:, adjustedDimensions);
+        end
     end
     
     % standardize dimensions
