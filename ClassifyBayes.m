@@ -1,7 +1,7 @@
 %% Classify using Naive Bayes Classification
 
 
-function [confusionTable] = ClassifyRandomForest(data, labels, trainSplit)
+function [confusionTable] = ClassifyBayes(data, labels, trainSplit)
     % Perform CV-split evaluation
     confusionTable = zeros(max(labels), max(labels));
     for k = 1 : size(trainSplit,2)

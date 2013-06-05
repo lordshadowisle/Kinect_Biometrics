@@ -1,31 +1,28 @@
-%% Classify using Discriminant Analysis (out-of-class)
-% A variant of the classifier, comparing the relative scores.
-% The evaluation is performed once per label, treating that label as an OOC
-% label.
+%% Classify using Naive Bayes Classification (out-of-class)
 
-function [confusionTable] = ClassifyLinearDiscriminant_ooc(data, labels, trainSplit)
+
+function [confusionTable] = ClassifyBayes_ooc(data, labels, trainSplit)
     % Perform CV-split evaluation
     confusionTable = zeros(max(labels), max(labels));
-    %determine the OOC label
+    
     for oocLabel = 1 : max(labels)
         tempOOCclass = labels ~= oocLabel;
         for k = 1 : size(trainSplit,2)
-            % Training Task
+            % Learning Task
             tempTrainSplit = trainSplit(:,k);
             tempTrainSplit = (tempTrainSplit & tempOOCclass);
-            learner = ClassificationDiscriminant.fit(data(tempTrainSplit,:), labels(tempTrainSplit));
+            learner = NaiveBayes.fit(data(tempTrainSplit,:), labels(tempTrainSplit), 'Distribution', 'kernel');
             [oocThreshold] = SetThreshold(learner, data(tempTrainSplit,:), labels(tempTrainSplit));
-            
+
             % Evaluation Task
             tempTrainSplit = trainSplit(:,k);
-            [predictedLabel, score] = predict(learner, data(~tempTrainSplit,:));
+            [score, predictedLabel] = posterior(learner, data(~tempTrainSplit,:));
             actualLabel = labels(~tempTrainSplit);
             % reject OOC samples
             sortedScores = sort(score,2, 'descend');
             multiplier = sortedScores(:,1) ./ (sortedScores(:,2)+.01);
             OOCreject = multiplier < oocThreshold;
             predictedLabel(OOCreject) = oocLabel;
-            % compute confusion tables
             for i = 1 : max(labels)
                 for j = 1 : max(labels)
                     confusionTable(i,j)=confusionTable(i,j) + sum((predictedLabel == j) .* (actualLabel==i));
@@ -35,12 +32,13 @@ function [confusionTable] = ClassifyLinearDiscriminant_ooc(data, labels, trainSp
     end
 end
 
+
 %% Set Threshold for OOC detection
 % Find a multiplier threshold that maximizes the chance of correct
 % classification
 function [oocThreshold, correctMultiplier, wrongMultiplier] = SetThreshold(learner, data, labels)
     costFactor = 1;
-    [predictedLabel, score] = predict(learner, data);
+    [score, predictedLabel] = posterior(learner, data);
     isCorrect = predictedLabel == labels;
     % compute general multipliers
     sortedScores = sort(score,2, 'descend');

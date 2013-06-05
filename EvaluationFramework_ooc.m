@@ -61,8 +61,8 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
                 %K-Nearest Neighbor -> Not converted
                 confusionTable = ClassifyKNN(processedData, processedLabels(:,3), trainTestMembership,3);
             case 3
-                %Bayesian classifier -> Not converted
-                confusionTable = ClassifyBayes(processedData, processedLabels(:,3), trainTestMembership);
+                %Bayesian classifier
+                confusionTable = ClassifyBayes_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 4
                 %Linear Discriminant 
                 confusionTable = ClassifyLinearDiscriminant_ooc(processedData, processedLabels(:,3), trainTestMembership);
