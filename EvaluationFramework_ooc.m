@@ -58,7 +58,7 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
                 %Multi-class random forest -> Not converted
                 confusionTable = ClassifyRandomForest(processedData, processedLabels(:,3), trainTestMembership);
             case 2
-                %K-Nearest Neighbor -> Not converted
+                %K-Nearest Neighbor
                 confusionTable = ClassifyKNN_ooc(processedData, processedLabels(:,3), trainTestMembership,3);
             case 3
                 %Bayesian classifier
@@ -66,6 +66,9 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
             case 4
                 %Linear Discriminant 
                 confusionTable = ClassifyLinearDiscriminant_ooc(processedData, processedLabels(:,3), trainTestMembership);
+            case 5
+                %Decision Tree
+                confusionTable = ClassifyDecisionTree_ooc(processedData, processedLabels(:,3), trainTestMembership);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
             
