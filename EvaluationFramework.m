@@ -4,6 +4,7 @@
 % recognition. An option is included to repeat the cross-validation using
 % different random seeds.
 % 04/06: Added options for PCA and PCA dimensionality reduction preprocessing
+% 05/06: Added options for different data settings
 %
 % There are two evaluation tasks for the palm biometrics
 % i) Simple user verification
@@ -64,6 +65,9 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
             case 4
                 %Linear Discriminant
                 confusionTable = ClassifyLinearDiscriminant(processedData, processedLabels(:,3), trainTestMembership);
+            case 5
+                %Decision Tree
+                confusionTable = ClassifyDecisionTree(processedData, processedLabels(:,3), trainTestMembership);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
             
