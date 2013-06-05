@@ -42,7 +42,7 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
         [~, processedData, latent] = princomp(caseData);
         % If dimensionality reduction is on, filter the least descriptive components
         if exist('dimReducePCA')
-            dimReducePCAIndex = min(find((cumsum(latent) / sum(latent)) > dimReducePCA));
+            dimReducePCAIndex = find((cumsum(latent) / sum(latent)) > dimReducePCA, 1 );
             processedData = processedData(:, 1:dimReducePCAIndex);
         end
     end
@@ -59,7 +59,7 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
                 confusionTable = ClassifyRandomForest(processedData, processedLabels(:,3), trainTestMembership);
             case 2
                 %K-Nearest Neighbor -> Not converted
-                confusionTable = ClassifyKNN(processedData, processedLabels(:,3), trainTestMembership,3);
+                confusionTable = ClassifyKNN_ooc(processedData, processedLabels(:,3), trainTestMembership,3);
             case 3
                 %Bayesian classifier
                 confusionTable = ClassifyBayes_ooc(processedData, processedLabels(:,3), trainTestMembership);
