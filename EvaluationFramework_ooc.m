@@ -72,6 +72,9 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
             case 6
                 %NND
                 confusionTable = ClassifyNND_ooc(processedData, processedLabels(:,3), trainTestMembership);
+            case 6.1
+                %NND with Optimizier
+                confusionTable = ClassifyNNDopt_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 7
                 %k-NND
                 confusionTable = ClassifykNND_ooc(processedData, processedLabels(:,3), trainTestMembership,3);
