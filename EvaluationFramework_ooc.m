@@ -32,7 +32,8 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
     %% Preprocessing
     % Load data and labels from memory
     [caseData, caseLabels] = LoadData(loadSetting);
-    evaluationResult = zeros(caseLabels(end,3), caseLabels(end,3),numTrials);   % reserve first class as OOC
+    evaluationResult = zeros(caseLabels(end,3), caseLabels(end,3),numTrials);
+    oocResult = zeros(4, caseLabels(end,3),numTrials);      % evaluation results for ooc detection
     processedData = caseData;
     processedLabels = caseLabels;
     
@@ -71,19 +72,23 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
                 confusionTable = ClassifyDecisionTree_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 6
                 %NND
-                confusionTable = ClassifyNND_ooc(processedData, processedLabels(:,3), trainTestMembership);
+                [confusionTable, oocDetectionRate] = ClassifyNND_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 6.1
-                %NND with Optimizier
-                confusionTable = ClassifyNNDopt_ooc(processedData, processedLabels(:,3), trainTestMembership);
+                %NND with Optimizier v.1
+                [confusionTable, oocDetectionRate] = ClassifyNNDopt_ooc(processedData, processedLabels(:,3), trainTestMembership);
+            case 6.2
+                %NND with Optimizer v.2 (still prototyping)
+                confusionTable = ClassifyNNDopt2_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 7
                 %k-NND
                 confusionTable = ClassifykNND_ooc(processedData, processedLabels(:,3), trainTestMembership,3);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
+        oocResult(:,:,trialIdx) = oocDetectionRate;
             
 
     end
-        evaluationMetrics = ComputeEvaluationMetrics(evaluationResult);
+        evaluationMetrics = ComputeEvaluationMetrics(evaluationResult, oocResult);
 end
 
 %% Load Data
@@ -176,8 +181,12 @@ end
 %% Compute Evaluation Metrics
 % Outputs: Accuracy, Micro-averaged F-measure, Macro-averaged F-measure
 % Remains the same for a novel class problem.
-function [evaluationMetrics] = ComputeEvaluationMetrics(confusionTable)
-    evaluationMetrics = zeros(1,3);
+% Added new row for ooc evaluation -> reverts to original if empty
+% Evaluation Metrics: 
+% (1,1:3) = accuracy, micro-averaged F-measure, macro-averaged F-measure
+% (2,1:3) = TPR, TNR, FNR
+function [evaluationMetrics] = ComputeEvaluationMetrics(confusionTable, oocDetectionRate)
+    evaluationMetrics = zeros(2,3);
     compactTable = sum(confusionTable,3);
     
     % Compute micro-averaged F-measure
@@ -213,7 +222,15 @@ function [evaluationMetrics] = ComputeEvaluationMetrics(confusionTable)
     Fmacro = F / size(compactTable,1);
     
     % Export Fmicro and Fmacro
-    evaluationMetrics(1) = sum(diag(compactTable)) / sum(sum(compactTable));
-    evaluationMetrics(2) = Fmicro;
-    evaluationMetrics(3) = Fmacro;
+    evaluationMetrics(1,1) = sum(diag(compactTable)) / sum(sum(compactTable));
+    evaluationMetrics(1,2) = Fmicro;
+    evaluationMetrics(1,3) = Fmacro;
+    
+    % Compute Metrics for oocDetection
+    if all(oocDetectionRate)
+        mergeOOC = sum(sum(oocDetectionRate, 3),2);     %TP, FP, TN, FN
+        evaluationMetrics(2,1) = mergeOOC(1) / (mergeOOC(1) + mergeOOC(2)); %TPR
+        evaluationMetrics(2,2) = mergeOOC(3) / (mergeOOC(3) + mergeOOC(4)); %TNR
+        evaluationMetrics(2,3) = mergeOOC(4) / (mergeOOC(3) + mergeOOC(4)); %FNR
+    end
 end
