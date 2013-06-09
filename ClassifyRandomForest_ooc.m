@@ -1,10 +1,13 @@
 %% Classify using Random Forest (out-of-class)
 % Added functionality to perform evaluation using CV splits
 % Simplified form
+% 09/06: Added output for ooc detection statistics
 
-function [confusionTable] = ClassifyRandomForest_ooc(data, labels, trainSplit)
+function [confusionTable, oocDetectionRate] = ClassifyRandomForest_ooc(data, labels, trainSplit)
     % Perform CV-split evaluation
     confusionTable = zeros(max(labels), max(labels));
+    oocDetectionRate = zeros(4,max(labels));        %tp, fp, tn, fn
+
     %determine the OOC label
     for oocLabel = 1 : max(labels)
         tempOOCclass = labels ~= oocLabel;
@@ -30,6 +33,16 @@ function [confusionTable] = ClassifyRandomForest_ooc(data, labels, trainSplit)
                     confusionTable(i,j)=confusionTable(i,j) + sum((predictedLabel == j) .* (actualLabel==i));
                 end
             end
+            
+            % compute outlier detection statistics
+            % true ooc positive (when both predicted and actual labels are ooc)
+            oocDetectionRate(1,oocLabel) = oocDetectionRate(1, oocLabel) + sum((predictedLabel == oocLabel) .* (actualLabel == oocLabel));
+            % false ooc positive (when predicted is ooC but actual is not)
+            oocDetectionRate(2,oocLabel) = oocDetectionRate(2, oocLabel) + sum((predictedLabel == oocLabel) .* (actualLabel ~= oocLabel)); 
+            % true ooc negative (when predicted and actual are not ooc)
+            oocDetectionRate(3,oocLabel) = oocDetectionRate(3, oocLabel) + sum((predictedLabel ~= oocLabel) .* (actualLabel ~= oocLabel));
+            % false ooc negative (when predicted is not ooc but acutal is)
+            oocDetectionRate(4,oocLabel) = oocDetectionRate(4, oocLabel) + sum((predictedLabel ~= oocLabel) .* (actualLabel == oocLabel));
         end
     end
 end

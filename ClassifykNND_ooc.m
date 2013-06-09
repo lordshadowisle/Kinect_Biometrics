@@ -4,11 +4,14 @@
 % Note: Uses a slightly different coding structure for efficiency.
 % Note: Extended to K-NN.
 % Note: Needs a scale factor chooser.
+% 09/06: Added output for ooc detection statistics
 
-function [confusionTable] = ClassifykNND_ooc(data, labels, trainSplit, K)
+function [confusionTable, oocDetectionRate] = ClassifykNND_ooc(data, labels, trainSplit, K)
     scaleFactor = .5;
     % Perform CV-split evaluation
     confusionTable = zeros(max(labels), max(labels));
+    oocDetectionRate = zeros(4,max(labels));        %tp, fp, tn, fn
+
     %determine the OOC label
     for oocLabel = 1 : max(labels)
         tempOOCclass = labels ~= oocLabel;
@@ -35,6 +38,16 @@ function [confusionTable] = ClassifykNND_ooc(data, labels, trainSplit, K)
                     confusionTable(i,j)=confusionTable(i,j) + sum((predictedLabel == j) .* (actualLabel==i));
                 end
             end
+            
+            % compute outlier detection statistics
+            % true ooc positive (when both predicted and actual labels are ooc)
+            oocDetectionRate(1,oocLabel) = oocDetectionRate(1, oocLabel) + sum((predictedLabel == oocLabel) .* (actualLabel == oocLabel));
+            % false ooc positive (when predicted is ooC but actual is not)
+            oocDetectionRate(2,oocLabel) = oocDetectionRate(2, oocLabel) + sum((predictedLabel == oocLabel) .* (actualLabel ~= oocLabel)); 
+            % true ooc negative (when predicted and actual are not ooc)
+            oocDetectionRate(3,oocLabel) = oocDetectionRate(3, oocLabel) + sum((predictedLabel ~= oocLabel) .* (actualLabel ~= oocLabel));
+            % false ooc negative (when predicted is not ooc but acutal is)
+            oocDetectionRate(4,oocLabel) = oocDetectionRate(4, oocLabel) + sum((predictedLabel ~= oocLabel) .* (actualLabel == oocLabel));
         end
     end
 end
