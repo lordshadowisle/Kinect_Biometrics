@@ -57,19 +57,19 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
         switch learningMethod
             case 1
                 %Multi-class random forest
-                confusionTable = ClassifyRandomForest_ooc(processedData, processedLabels(:,3), trainTestMembership);
+                [confusionTable, oocDetectionRate] = ClassifyRandomForest_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 2
                 %K-Nearest Neighbor
-                confusionTable = ClassifyKNN_ooc(processedData, processedLabels(:,3), trainTestMembership,3);
+                [confusionTable, oocDetectionRate] = ClassifyKNN_ooc(processedData, processedLabels(:,3), trainTestMembership,3);
             case 3
                 %Bayesian classifier
-                confusionTable = ClassifyBayes_ooc(processedData, processedLabels(:,3), trainTestMembership);
+                [confusionTable, oocDetectionRate] = ClassifyBayes_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 4
                 %Linear Discriminant 
-                confusionTable = ClassifyLinearDiscriminant_ooc(processedData, processedLabels(:,3), trainTestMembership);
+                [confusionTable, oocDetectionRate] = ClassifyLinearDiscriminant_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 5
                 %Decision Tree
-                confusionTable = ClassifyDecisionTree_ooc(processedData, processedLabels(:,3), trainTestMembership);
+                [confusionTable, oocDetectionRate] = ClassifyDecisionTree_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 6
                 %NND
                 [confusionTable, oocDetectionRate] = ClassifyNND_ooc(processedData, processedLabels(:,3), trainTestMembership);
@@ -78,10 +78,10 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
                 [confusionTable, oocDetectionRate] = ClassifyNNDopt_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 6.2
                 %NND with Optimizer v.2 (still prototyping)
-                confusionTable = ClassifyNNDopt2_ooc(processedData, processedLabels(:,3), trainTestMembership);
+                [confusionTable, oocDetectionRate] = ClassifyNNDopt2_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 7
                 %k-NND
-                confusionTable = ClassifykNND_ooc(processedData, processedLabels(:,3), trainTestMembership,3);
+                [confusionTable, oocDetectionRate] = ClassifykNND_ooc(processedData, processedLabels(:,3), trainTestMembership,3);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
         oocResult(:,:,trialIdx) = oocDetectionRate;
@@ -184,7 +184,7 @@ end
 % Added new row for ooc evaluation -> reverts to original if empty
 % Evaluation Metrics: 
 % (1,1:3) = accuracy, micro-averaged F-measure, macro-averaged F-measure
-% (2,1:3) = TPR, TNR, FNR
+% (2,1:3) = TPR, TNR, FNR, P rate
 function [evaluationMetrics] = ComputeEvaluationMetrics(confusionTable, oocDetectionRate)
     evaluationMetrics = zeros(2,3);
     compactTable = sum(confusionTable,3);
@@ -227,10 +227,11 @@ function [evaluationMetrics] = ComputeEvaluationMetrics(confusionTable, oocDetec
     evaluationMetrics(1,3) = Fmacro;
     
     % Compute Metrics for oocDetection
-    if all(oocDetectionRate)
+    if any(oocDetectionRate)
         mergeOOC = sum(sum(oocDetectionRate, 3),2);     %TP, FP, TN, FN
         evaluationMetrics(2,1) = mergeOOC(1) / (mergeOOC(1) + mergeOOC(2)); %TPR
         evaluationMetrics(2,2) = mergeOOC(3) / (mergeOOC(3) + mergeOOC(4)); %TNR
         evaluationMetrics(2,3) = mergeOOC(4) / (mergeOOC(3) + mergeOOC(4)); %FNR
+        evaluationMetrics(2,4) = mergeOOC(1) / (mergeOOC(1) + mergeOOC(4)); %P detect
     end
 end
