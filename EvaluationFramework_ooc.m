@@ -10,15 +10,30 @@
 % i) Simple user verification
 % ii) Novel user verification
 % This performs the novel user verification task.
+%
+%% INPUTS AND OUTPUTS:
+% switchCode: [1-7], selects a learning method.
+% numTrials: [integer], number of trials to run
+% varargin(3): [0 or 1], to use PCA transformation
+% varargin(4): [0~1, float], to choose the percentage variation to retain using PCA
+%%%%
+% evaluationResult: A confusion table, the third dimension is the number of trials.
+% evaluationMetrics: A 2*4 vector, recording the accuracy, micro-averaged,
+% and macro-averaged F-measure, and the TPR, TNR, FNR, and P detection
+% rate.
+% caseData: A placeholder for future output variables.
+% caseLabels: A placeholder for future output variables.
 
 function [evaluationResult, evaluationMetrics, caseData, caseLabels] = EvaluationFramework_ooc(switchCode, numTrials, varargin)
-    switchCode;
-    learningMethod = switchCode;
-    testSplit = 10;
-    usePCA = 0;
-    loadSetting = 1;
+    % Important Settings
+    learningMethod = switchCode;% Sets the learning method to be evaluated.
+    testSplit = 10;             % Number of CV splits used. Needs to be manually set here.
+    usePCA = 0;                 % PCA Switch; will be loaded via varagin.
+    loadSetting = 1;            % READ LoadData function header for info. Needs to be manually set here.
     
     % Argument check to enable PCA preprocessing
+    % If third argument of function exists, it is usePCA switch.
+    % If fourth argument exists, it is the % of PCA variance to keep.
     if ~isempty(varargin)
         usePCA = 1;
         if nargin >= 4
@@ -184,7 +199,7 @@ end
 % Added new row for ooc evaluation -> reverts to original if empty
 % Evaluation Metrics: 
 % (1,1:3) = accuracy, micro-averaged F-measure, macro-averaged F-measure
-% (2,1:3) = TPR, TNR, FNR, P rate
+% (2,1:4) = TPR, TNR, FNR, P detection rate
 function [evaluationMetrics] = ComputeEvaluationMetrics(confusionTable, oocDetectionRate)
     evaluationMetrics = zeros(2,3);
     compactTable = sum(confusionTable,3);
