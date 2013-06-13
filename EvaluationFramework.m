@@ -82,6 +82,9 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
             case 5
                 %Decision Tree
                 confusionTable = ClassifyDecisionTree(processedData, processedLabels(:,3), trainTestMembership);
+            case 6
+                %Multi-class SVM (using SVMLight)
+                confusionTable = ClassifySVM(processedData, processedLabels(:,3), trainTestMembership);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
             
