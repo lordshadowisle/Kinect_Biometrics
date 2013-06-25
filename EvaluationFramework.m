@@ -5,6 +5,7 @@
 % different random seeds.
 % 04/06: Added options for PCA and PCA dimensionality reduction preprocessing
 % 05/06: Added options for different data settings
+% 25/06: Generalized loadData for different datasets
 %
 % There are two evaluation tasks for the palm biometrics
 % i) Simple user verification
@@ -27,7 +28,7 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
     learningMethod = switchCode;% Sets the learning method to be evaluated.
     testSplit = 10;             % Number of CV splits used. Needs to be manually set here.
     usePCA = 0;                 % PCA Switch; will be loaded via varagin.
-    loadSetting = 1;            % READ LoadData function header for info. Needs to be manually set here.
+    loadSetting = 0;            % READ LoadData function header for info. Needs to be manually set here.
     
     % Argument check to enable PCA preprocessing
     % If third argument of function exists, it is usePCA switch.
@@ -98,20 +99,28 @@ end
 % 0 - Full dataset, no discarded dimensions
 % 1 - Non-adjusted dimensions discarded
 % 2 - Also discard thumb and little finger
+% 25/06: Modified to compact data and class matrices
 function [caseData, caseLabels] = LoadData(loadSetting)
     caseData = [];
     caseLabels = [];
-    for switchCode = [1,2,3]
+    labelIdx = 1;
+    for switchCode = [5,6,7]
         switch switchCode
             % The following are the new cases collected by the special method
             case 1
-                fileName = 'DCI_twl2';
+                fileName = 'DCI_twl';
             case 2
                 fileName = 'DCI_tcg';
             case 3
                 fileName = 'DCI_txm';        
             case 4
                 fileName = 'DCI_wly'; %--> as expected, mostly unusable data
+            case 5
+                fileName = 'DCI_twl2';
+            case 6
+                fileName = 'DCI_tcg2';
+            case 7
+                fileName = 'DCI_txm2';
         end
         load(['..\HandSegmentation\Descriptors\' fileName '_descriptors'], 'datasetDescriptors');
         tempCaseData = datasetDescriptors.Descriptors;
@@ -120,7 +129,9 @@ function [caseData, caseLabels] = LoadData(loadSetting)
         caseData = [caseData;tempCaseData(isUsable,:)];
         tempCaseLabels = tempCaseLabels(isUsable);
         tempCaseLabels(:,2) = switchCode;
-        tempCaseLabels(:,3) = 2*(tempCaseLabels(:,2)-1)+ tempCaseLabels(:,1);
+        %tempCaseLabels(:,3) = 2*(tempCaseLabels(:,2)-1)+ tempCaseLabels(:,1);  % old code, depreciated.
+        tempCaseLabels(:,3) = (tempCaseLabels(:,1) > mean(tempCaseLabels(:,1))) + labelIdx;
+        labelIdx = labelIdx + 2;
         caseLabels =[caseLabels; tempCaseLabels];
     end
     
@@ -129,6 +140,7 @@ function [caseData, caseLabels] = LoadData(loadSetting)
         adjustedDimensions = [5*adjustedDimensions, 5*adjustedDimensions-1, 5*adjustedDimensions-2, 5*adjustedDimensions-3, 5*adjustedDimensions-4];
         adjustedDimensions = sort(adjustedDimensions);
         caseData = caseData(:, adjustedDimensions);
+        %caseData(:,adjustedDimensions) = [];
         % Use only 3 middle fingers
         if loadSetting == 2
             adjustedDimensions = [2:5:size(caseData,2), 3:5:size(caseData,2), 4:5:size(caseData,2)];
