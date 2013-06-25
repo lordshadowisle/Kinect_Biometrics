@@ -13,7 +13,7 @@
 %
 %% INPUTS AND OUTPUTS:
 % switchCode: [1-5], selects a learning method.
-% numTrials: [integer], number of trials to run
+% numTrials: [integer], number of trials to run; if set to 0, uses LOOCV.
 % varargin(3): [0 or 1], to use PCA transformation
 % varargin(4): [0~1, float], to choose the percentage variation to retain using PCA
 %%%%
@@ -29,7 +29,13 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
     testSplit = 10;             % Number of CV splits used. Needs to be manually set here.
     usePCA = 0;                 % PCA Switch; will be loaded via varagin.
     loadSetting = 0;            % READ LoadData function header for info. Needs to be manually set here.
+    useLOOCV = 0;
     
+    % Determine if LOOCV is used by checking numTrials
+    if numTrials < 1
+        numTrials = 1;
+        useLOOCV = 1;
+    end
     % Argument check to enable PCA preprocessing
     % If third argument of function exists, it is usePCA switch.
     % If fourth argument exists, it is the % of PCA variance to keep.
@@ -62,9 +68,13 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
     end
     
     %% Main Training and Testing Loop
-    for trialIdx = 1 : numTrials
-        % Generate training and test proportions (using CV)
-        [trainTestMembership] = GenerateCVTrainTestMembership(caseLabels, testSplit, trialIdx);
+    for trialIdx = 1 : numTrials 
+        % Generate training and test proportions
+        if ~useLOOCV
+            [trainTestMembership] = GenerateCVTrainTestMembership(caseLabels, testSplit, trialIdx);
+        else
+            [trainTestMembership] = GenerateLOOCVTrainTestMembership(caseLabels);
+        end
 
         %% Learning and Evaluation
         switch learningMethod
@@ -190,6 +200,14 @@ function [trainTestMembership] = GenerateCVTrainTestMembership(caseLabels, testS
         end
     end
     trainTestMembership = trainTestMembership > 0;
+end
+
+%% Generate LOOCV TrainTestMemberships
+% trainTestMembership is a n*split vector, 1 represents train, 0 test.
+% In actuality, LOOCV can be computed more directly, but this structure
+% here is to maintain compatibility with old code.
+function [trainTestMembership] = GenerateLOOCVTrainTestMembership(caseLabels)
+    trainTestMembership = ~eye(size(caseLabels,1));
 end
 
 %% Compute Evaluation Metrics
