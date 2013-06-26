@@ -6,6 +6,7 @@
 % 04/06: Added options for PCA and PCA dimensionality reduction preprocessing
 % 05/06: Added options for different data settings
 % 25/06: Generalized loadData for different datasets
+% 26/06: LOOCV functionality
 %
 % There are two evaluation tasks for the palm biometrics
 % i) Simple user verification
@@ -96,6 +97,9 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
             case 6
                 %Multi-class SVM (using SVMLight)
                 confusionTable = ClassifySVM(processedData, processedLabels(:,3), trainTestMembership);
+            case 7
+                %Random subspace method (26/6)
+                confusionTable = ClassifyRandomSubspace(processedData, processedLabels(:,3), trainTestMembership);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
             
