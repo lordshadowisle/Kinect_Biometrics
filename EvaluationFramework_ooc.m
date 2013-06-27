@@ -88,6 +88,9 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
             case 2
                 %K-Nearest Neighbor
                 [confusionTable, oocDetectionRate] = ClassifyKNN_ooc(processedData, processedLabels(:,3), trainTestMembership,3);
+            case 2.5
+                %Large Margin K-Nearest Neighor
+                [confusionTable, oocDetectionRate] = ClassifyLargeMarginKNN_ooc(processedData, processedLabels(:,3), trainTestMembership,3);
             case 3
                 %Bayesian classifier
                 [confusionTable, oocDetectionRate] = ClassifyBayes_ooc(processedData, processedLabels(:,3), trainTestMembership);
@@ -109,6 +112,15 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
             case 7
                 %k-NND
                 [confusionTable, oocDetectionRate] = ClassifykNND_ooc(processedData, processedLabels(:,3), trainTestMembership,3);
+            case 8
+                % Large margin NND
+                [confusionTable, oocDetectionRate] = ClassifyLMNND_ooc(processedData, processedLabels(:,3), trainTestMembership);
+            case 8.1
+                % Large margin NND with Optimizer v.1
+                [confusionTable, oocDetectionRate] = ClassifyLMNNDopt_ooc(processedData, processedLabels(:,3), trainTestMembership);
+            case 8.2
+                % Large margin NND with Optimizer v.2
+                [confusionTable, oocDetectionRate] = ClassifyLMNNDopt2_ooc(processedData, processedLabels(:,3), trainTestMembership);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
         oocResult(:,:,trialIdx) = oocDetectionRate;
@@ -128,6 +140,7 @@ function [caseData, caseLabels] = LoadData(loadSetting)
     caseData = [];
     caseLabels = [];
     labelIdx = 1;
+    %for switchCode = [1,2,3]
     for switchCode = [5,6,7]
         switch switchCode
             % The following are the new cases collected by the special method
