@@ -100,6 +100,9 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
             case 7
                 %Random subspace method (26/6)
                 confusionTable = ClassifyRandomSubspace(processedData, processedLabels(:,3), trainTestMembership);
+            case 8
+                % Large Margin nearest neighbor
+                confusionTable = ClassifyLargeMarginNN(processedData, processedLabels(:,3), trainTestMembership, 3);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
             
@@ -118,6 +121,7 @@ function [caseData, caseLabels] = LoadData(loadSetting)
     caseData = [];
     caseLabels = [];
     labelIdx = 1;
+    %for switchCode = [1,2,3];
     for switchCode = [5,6,7]
         switch switchCode
             % The following are the new cases collected by the special method
