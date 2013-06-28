@@ -104,11 +104,14 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
                 %NND
                 [confusionTable, oocDetectionRate] = ClassifyNND_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 6.1
-                %NND with Optimizier v.1
+                %NND with Optimizier v.1 (Compare nearest in and out-of-class samples to decide scaleFctor.
                 [confusionTable, oocDetectionRate] = ClassifyNNDopt_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 6.2
-                %NND with Optimizer v.2 (still prototyping)
+                %NND with Optimizer v.2 (still prototyping -> Generalizes neighbor scales to each class)
                 [confusionTable, oocDetectionRate] = ClassifyNNDopt2_ooc(processedData, processedLabels(:,3), trainTestMembership);
+            case 6.3
+                %NND with Optimizer v.3 (Minimizes classification error to choose scaleFactor
+                [confusionTable, oocDetectionRate] = ClassifyNNDopt3_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 7
                 %k-NND
                 [confusionTable, oocDetectionRate] = ClassifykNND_ooc(processedData, processedLabels(:,3), trainTestMembership,3);
@@ -116,10 +119,10 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
                 % Large margin NND
                 [confusionTable, oocDetectionRate] = ClassifyLMNND_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 8.1
-                % Large margin NND with Optimizer v.1
+                % Large margin NND with Optimizer v.1 (Compare nearest in and out-of-class samples to decide scaleFctor.
                 [confusionTable, oocDetectionRate] = ClassifyLMNNDopt_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 8.2
-                % Large margin NND with Optimizer v.2
+                % Large margin NND with Optimizer v.2 (still prototyping -> Generalizes neighbor scales to each class)
                 [confusionTable, oocDetectionRate] = ClassifyLMNNDopt2_ooc(processedData, processedLabels(:,3), trainTestMembership);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
