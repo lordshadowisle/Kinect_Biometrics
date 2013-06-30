@@ -63,7 +63,8 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
     %% PCA Processing
     % Apply PCA dimensionality reduction
     if usePCA == 1
-        [~, processedData, latent] = princomp(caseData);
+        %[~, processedData, latent] = princomp(caseData);
+        [processedData, latent] = pca(caseData);
         % If dimensionality reduction is on, filter the least descriptive components
         if exist('dimReducePCA')
             dimReducePCAIndex = find((cumsum(latent) / sum(latent)) > dimReducePCA, 1 );
@@ -110,7 +111,7 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
                 %NND with Optimizer v.2 (still prototyping -> Generalizes neighbor scales to each class)
                 [confusionTable, oocDetectionRate] = ClassifyNNDopt2_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 6.3
-                %NND with Optimizer v.3 (Minimizes classification error to choose scaleFactor
+                %NND with Optimizer v.3 (Minimizes classification error to choose scaleFactor)
                 [confusionTable, oocDetectionRate] = ClassifyNNDopt3_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 7
                 %k-NND
@@ -124,6 +125,10 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
             case 8.2
                 % Large margin NND with Optimizer v.2 (still prototyping -> Generalizes neighbor scales to each class)
                 [confusionTable, oocDetectionRate] = ClassifyLMNNDopt2_ooc(processedData, processedLabels(:,3), trainTestMembership);
+            case 8.3
+                % Large margin NND with Optimizer v.3 (Minimizes classification error to choose scaleFactor)
+                [confusionTable, oocDetectionRate] = ClassifyLMNNDopt3_ooc(processedData, processedLabels(:,3), trainTestMembership);
+
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
         oocResult(:,:,trialIdx) = oocDetectionRate;
