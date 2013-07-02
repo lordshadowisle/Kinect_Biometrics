@@ -113,6 +113,12 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
             case 6.3
                 %NND with Optimizer v.3 (Minimizes classification error to choose scaleFactor)
                 [confusionTable, oocDetectionRate] = ClassifyNNDopt3_ooc(processedData, processedLabels(:,3), trainTestMembership);
+            case 6.4
+                % NND with absolute distances
+                [confusionTable, oocDetectionRate] = ClassifyNNDabs_ooc(processedData, processedLabels(:,3), trainTestMembership);
+            case 6.5
+                % NND using abolute distance with cluster-specific distance radius selection
+                [confusionTable, oocDetectionRate] = ClassifyNNDabs_ClusterDistanceRadius_ooc(processedData, processedLabels(:,3), trainTestMembership);                
             case 7
                 %k-NND
                 [confusionTable, oocDetectionRate] = ClassifykNND_ooc(processedData, processedLabels(:,3), trainTestMembership,3);
@@ -128,7 +134,15 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
             case 8.3
                 % Large margin NND with Optimizer v.3 (Minimizes classification error to choose scaleFactor)
                 [confusionTable, oocDetectionRate] = ClassifyLMNNDopt3_ooc(processedData, processedLabels(:,3), trainTestMembership);
-
+            case 8.4
+                % Large margin NND using absolute distance 
+                [confusionTable, oocDetectionRate] = ClassifyLMNNDabs_ooc(processedData, processedLabels(:,3), trainTestMembership);
+            case 8.5 
+                % Large margin NND using abolute distance with cluster-specific distance radius selection
+                [confusionTable, oocDetectionRate] = ClassifyLLNNDabs_ClusterDistanceRadius_ooc(processedData, processedLabels(:,3), trainTestMembership);
+            otherwise
+                %% EXPERIMENTAL
+                [confusionTable, oocDetectionRate] = ClassifyEXPERIMENTAL(processedData, processedLabels(:,3), trainTestMembership);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
         oocResult(:,:,trialIdx) = oocDetectionRate;
