@@ -118,7 +118,7 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
                 [confusionTable, oocDetectionRate] = ClassifyNNDabs_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 6.5
                 % NND using abolute distance with cluster-specific distance radius selection
-                [confusionTable, oocDetectionRate] = ClassifyNNDabs_ClusterDistanceRadius_ooc(processedData, processedLabels(:,3), trainTestMembership);                
+                [confusionTable, oocDetectionRate] = ClassifyNNDabs_ClusterDistanceRadius_ooc(processedData, processedLabels(:,3), trainTestMembership);  
             case 7
                 %k-NND
                 [confusionTable, oocDetectionRate] = ClassifykNND_ooc(processedData, processedLabels(:,3), trainTestMembership,3);
@@ -140,9 +140,12 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
             case 8.5 
                 % Large margin NND using abolute distance with cluster-specific distance radius selection
                 [confusionTable, oocDetectionRate] = ClassifyLLNNDabs_ClusterDistanceRadius_ooc(processedData, processedLabels(:,3), trainTestMembership);
+            case 9.4
+                % Two stage model with linear discriminant classifier
+                [confusionTable, oocDetectionRate] = ClassifyTwoStageLinearDiscriminant_ooc(processedData, processedLabels(:,3), trainTestMembership);
             otherwise
                 %% EXPERIMENTAL
-                [confusionTable, oocDetectionRate] = ClassifyEXPERIMENTAL(processedData, processedLabels(:,3), trainTestMembership);
+                [confusionTable, oocDetectionRate] = ClassifyEXPERIMENTAL2(processedData, processedLabels(:,3), trainTestMembership);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
         oocResult(:,:,trialIdx) = oocDetectionRate;
