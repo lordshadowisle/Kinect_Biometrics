@@ -102,54 +102,56 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
                 %Decision Tree
                 [confusionTable, oocDetectionRate] = ClassifyDecisionTree_ooc(processedData, processedLabels(:,3), trainTestMembership);
             case 6
+                % SVM (libsvm)
+                [confusionTable, oocDetectionRate] = ClassifySVM2_ooc(processedData, processedLabels(:,3), trainTestMembership);
+            case 7
                 %NND
                 [confusionTable, oocDetectionRate] = ClassifyNND_ooc(processedData, processedLabels(:,3), trainTestMembership);
-            case 6.1
+            case 7.1
                 %NND with Optimizier v.1 (Compare nearest in and out-of-class samples to decide scaleFctor.
                 [confusionTable, oocDetectionRate] = ClassifyNNDopt_ooc(processedData, processedLabels(:,3), trainTestMembership);
-            case 6.2
+            case 7.2
                 %NND with Optimizer v.2 (still prototyping -> Generalizes neighbor scales to each class)
                 [confusionTable, oocDetectionRate] = ClassifyNNDopt2_ooc(processedData, processedLabels(:,3), trainTestMembership);
-            case 6.3
+            case 7.3
                 %NND with Optimizer v.3 (Minimizes classification error to choose scaleFactor)
                 [confusionTable, oocDetectionRate] = ClassifyNNDopt3_ooc(processedData, processedLabels(:,3), trainTestMembership);
-            case 6.4
+            case 7.4
                 % NND with absolute distances
                 [confusionTable, oocDetectionRate] = ClassifyNNDabs_ooc(processedData, processedLabels(:,3), trainTestMembership);
-            case 6.5
+            case 7.5
                 % NND using abolute distance with cluster-specific distance radius selection
                 [confusionTable, oocDetectionRate] = ClassifyNNDabs_ClusterDistanceRadius_ooc(processedData, processedLabels(:,3), trainTestMembership);  
-            case 7
+            case 8
                 %k-NND
                 [confusionTable, oocDetectionRate] = ClassifykNND_ooc(processedData, processedLabels(:,3), trainTestMembership,3);
-            case 8
+            case 9
                 % Large margin NND
                 [confusionTable, oocDetectionRate] = ClassifyLMNND_ooc(processedData, processedLabels(:,3), trainTestMembership);
-            case 8.1
+            case 9.1
                 % Large margin NND with Optimizer v.1 (Compare nearest in and out-of-class samples to decide scaleFctor.
                 [confusionTable, oocDetectionRate] = ClassifyLMNNDopt_ooc(processedData, processedLabels(:,3), trainTestMembership);
-            case 8.2
+            case 9.2
                 % Large margin NND with Optimizer v.2 (still prototyping -> Generalizes neighbor scales to each class)
                 [confusionTable, oocDetectionRate] = ClassifyLMNNDopt2_ooc(processedData, processedLabels(:,3), trainTestMembership);
-            case 8.3
+            case 9.3
                 % Large margin NND with Optimizer v.3 (Minimizes classification error to choose scaleFactor)
                 [confusionTable, oocDetectionRate] = ClassifyLMNNDopt3_ooc(processedData, processedLabels(:,3), trainTestMembership);
-            case 8.4
+            case 9.4
                 % Large margin NND using absolute distance 
                 [confusionTable, oocDetectionRate] = ClassifyLMNNDabs_ooc(processedData, processedLabels(:,3), trainTestMembership);
-            case 8.5 
+            case 9.5 
                 % Large margin NND using abolute distance with cluster-specific distance radius selection
                 [confusionTable, oocDetectionRate] = ClassifyLLNNDabs_ClusterDistanceRadius_ooc(processedData, processedLabels(:,3), trainTestMembership);
-            case 9.4
+            case 10.4
                 % Two stage model with linear discriminant classifier
                 [confusionTable, oocDetectionRate] = ClassifyTwoStageLinearDiscriminant_ooc(processedData, processedLabels(:,3), trainTestMembership);
-            case 9.6
+            case 10.6
                 % Two stage model with SVM
                 [confusionTable, oocDetectionRate] = ClassifyTwoStageSVM_ooc(processedData, processedLabels(:,3), trainTestMembership);
             otherwise
                 %% EXPERIMENTAL
-                %[confusionTable, oocDetectionRate] = ClassifyEXPERIMENTAL2(processedData, processedLabels(:,3), trainTestMembership);
-                [confusionTable, oocDetectionRate] = ClassifySVM_ooc(processedData, processedLabels(:,3), trainTestMembership);
+                [confusionTable, oocDetectionRate] = ClassifyEXPERIMENTAL2(processedData, processedLabels(:,3), trainTestMembership);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
         oocResult(:,:,trialIdx) = oocDetectionRate;
