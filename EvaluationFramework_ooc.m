@@ -143,9 +143,13 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
             case 9.4
                 % Two stage model with linear discriminant classifier
                 [confusionTable, oocDetectionRate] = ClassifyTwoStageLinearDiscriminant_ooc(processedData, processedLabels(:,3), trainTestMembership);
+            case 9.6
+                % Two stage model with SVM
+                [confusionTable, oocDetectionRate] = ClassifyTwoStageSVM_ooc(processedData, processedLabels(:,3), trainTestMembership);
             otherwise
                 %% EXPERIMENTAL
-                [confusionTable, oocDetectionRate] = ClassifyEXPERIMENTAL2(processedData, processedLabels(:,3), trainTestMembership);
+                %[confusionTable, oocDetectionRate] = ClassifyEXPERIMENTAL2(processedData, processedLabels(:,3), trainTestMembership);
+                [confusionTable, oocDetectionRate] = ClassifySVM_ooc(processedData, processedLabels(:,3), trainTestMembership);
         end
         evaluationResult(:,:,trialIdx) = confusionTable;
         oocResult(:,:,trialIdx) = oocDetectionRate;
