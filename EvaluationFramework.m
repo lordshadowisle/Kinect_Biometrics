@@ -60,10 +60,11 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
     %% PCA Processing
     % Apply PCA dimensionality reduction
     if usePCA == 1
-        [~, processedData, latent] = princomp(caseData);
+        %[~, processedData, latent] = princomp(caseData);
+        [processedData, latent] = pca(caseData);
         % If dimensionality reduction is on, filter the least descriptive components
         if exist('dimReducePCA')
-            dimReducePCAIndex = min(find((cumsum(latent) / sum(latent)) > dimReducePCA));
+            dimReducePCAIndex = find((cumsum(latent) / sum(latent)) > dimReducePCA, 1 );
             processedData = processedData(:, 1:dimReducePCAIndex);
         end
     end
@@ -97,6 +98,9 @@ function [evaluationResult, evaluationMetrics, caseData, caseLabels] = Evaluatio
             case 6
                 %Multi-class SVM (using SVMLight)
                 confusionTable = ClassifySVM(processedData, processedLabels(:,3), trainTestMembership);
+            case 6.1
+                %Multi-class SMV (using libsvm)
+                confusionTable = ClassifySVM2(processedData, processedLabels(:,3), trainTestMembership);
             case 7
                 %Random subspace method (26/6)
                 confusionTable = ClassifyRandomSubspace(processedData, processedLabels(:,3), trainTestMembership);
